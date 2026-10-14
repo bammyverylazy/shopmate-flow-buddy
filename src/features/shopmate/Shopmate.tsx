@@ -5,10 +5,18 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import growing from '@/assets/Growing_home.gif.asset.json';
 import improving from '@/assets/Improving_home.gif.asset.json';
 import recovery from '@/assets/Recovery_home.gif.asset.json';
+import growingPoster from '@/assets/Growing_home.gif.poster.png.asset.json';
+import improvingPoster from '@/assets/Improving_home.gif.poster.png.asset.json';
+import recoveryPoster from '@/assets/Recovery_home.gif.poster.png.asset.json';
 import { contribution, defaultCosts, mentors, money, salesSummary, screens, screenLabels, type Costs, type Mentor, type Screen } from './model';
 import { SalesChart } from './SalesChart';
 
 type Message = { role: 'owner' | 'guide'; text: string };
+function House({ state, alt }: { state: 'growing' | 'improving' | 'recovery'; alt: string }) {
+  const assets = { growing: [growing, growingPoster], improving: [improving, improvingPoster], recovery: [recovery, recoveryPoster] };
+  const [animation, poster] = assets[state];
+  return <picture><source media="(prefers-reduced-motion: reduce)" srcSet={poster?.url}/><img src={animation?.url} alt={alt}/></picture>;
+}
 function Brand() { return <div className="brand"><span className="brand-mark"><Store size={21}/></span><span>shopmate<span className="brand-period">.</span></span></div>; }
 function Avatar({ mentor, small = false }: { mentor: Mentor; small?: boolean }) { return <div className={`avatar avatar-${mentor.id} ${small ? 'avatar-small' : ''}`} aria-label={mentor.name}>{mentor.initials}</div>; }
 function Composer({ onSend, label }: { onSend: (text: string) => void; label: string }) {
@@ -49,7 +57,6 @@ export function Shopmate() {
     ] }));
     go('MentorChat');
   }
-  const house = mission ? improving : recovery;
 
   return <div className="shopmate-shell">
     <header className="app-header"><Brand/>{screen === 'Opening' ? <Button variant="ghost" size="sm" onClick={() => go('ShopAlert')}>Skip intro<ArrowRight/></Button> : <span className="shop-tag"><span className="status-dot"/>Aunt Nid’s Kitchen</span>}</header>
@@ -57,7 +64,7 @@ export function Shopmate() {
       <div className="opening-eyebrow"><Leaf size={14}/>A little support. A stronger shop.</div>
       <h1>Your shop.<br/>Your next chapter.</h1>
       <p>Understand your numbers, take one small step,<br className="desktop-break"/> and grow with someone in your corner.</p>
-      <div className="opening-art"><img src={growing.url} alt="A thriving shop with a green roof and growing plants"/><span className="art-note"><Sparkles size={14}/>Good things start small</span></div>
+      <div className="opening-art"><House state="growing" alt="A thriving shop with a green roof and growing plants"/><span className="art-note"><Sparkles size={14}/>Good things start small</span></div>
       <div className="opening-path"><span><TrendingDown/>Find your signal</span><ArrowRight/><span><Leaf/>Take action</span><ArrowRight/><span><Users/>Get support</span></div>
       <div className="opening-bottom">{nextButton('Explore my shop', 'ShopAlert')}<p className="prototype-notice">Interactive prototype · Example business data</p></div>
     </main> : <>
@@ -68,7 +75,7 @@ export function Shopmate() {
           <div className="eyebrow">YOUR SHOP, AT A GLANCE</div>
           <h1>A small dip.<br/>Let’s take action.</h1>
           <p className="lead">Your shop has seen fewer orders recently.<br/>Let’s take a closer look, together.</p>
-          <div className="shop-status"><div><span className="pill pill-warning"><TrendingDown size={13}/>Needs attention</span><h2>Aunt Nid’s Kitchen</h2><p>Thai home-style meals</p></div><img src={recovery.url} alt="Shop in the recovery stage"/></div>
+          <div className="shop-status"><div><span className="pill pill-warning"><TrendingDown size={13}/>Needs attention</span><h2>Aunt Nid’s Kitchen</h2><p>Thai home-style meals</p></div><House state="recovery" alt="Shop in the recovery stage"/></div>
           <div className="metrics"><div><span>Sales change</span><strong className="negative">−{Math.abs(summary.salesChange).toFixed(1)}%<TrendingDown size={17}/></strong><small>vs. previous 4 weeks</small></div><div><span>Orders</span><strong>{summary.orders}<small className="negative">−{Math.abs(summary.orderChange).toFixed(1)}%</small></strong><small>Latest 4 weeks</small></div><div><span>Avg. order</span><strong>{money(summary.aov)}</strong><small>Order value</small></div></div>
           <SalesChart/>
           <p className="quiet-note"><span className="note-line"/>Fewer orders, rather than lower order value, explain the sales dip. The cause is still uncertain.</p>
@@ -94,7 +101,7 @@ export function Shopmate() {
             <div className={`contribution-result ${result.contribution < 0 ? 'loss' : ''}`}><div><span>Est. contribution / order</span><strong data-testid="contribution">{result.valid ? money(result.contribution) : '—'}</strong></div><div><span>Margin</span><strong>{result.valid ? `${result.margin.toFixed(1)}%` : '—'}</strong></div></div>
             <details className="calculation-details"><summary>How is this calculated?<ChevronDown size={13}/></summary><p>Fee = price × fee %. Variable cost = ingredients + packaging + other costs + fee. Contribution = price − variable cost. Margin = contribution ÷ price × 100 (0 when price is 0). Not net profit; fixed expenses are excluded.</p></details>
           </section>
-          <section className="mission"><div><span className="eyebrow">{mission ? 'MISSION STARTED' : 'YOUR RECOMMENDED MISSION'}</span><h2>Test a lunch bundle</h2><p>Choose a set · Test for 7 days · Track bundle orders</p></div><img src={house.url} alt={mission ? 'Shop improving as your mission begins' : 'Shop ready for its recovery mission'}/></section>
+          <section className="mission"><div><span className="eyebrow">{mission ? 'MISSION STARTED' : 'YOUR RECOMMENDED MISSION'}</span><h2>Test a lunch bundle</h2><p>Choose a set · Test for 7 days · Track bundle orders</p></div><House state={mission ? 'improving' : 'recovery'} alt={mission ? 'Shop improving as your mission begins' : 'Shop ready for its recovery mission'}/></section>
           <div className="screen-footer">{mission ? nextButton('Continue to mentors', 'MentorMatch', !result.valid) : <Button className="primary-action" disabled={!result.valid} onClick={() => setMission(true)}>Start this mission<ArrowRight/></Button>}</div>
         </>}
         {screen === 'MentorMatch' && <>
@@ -123,6 +130,6 @@ export function Shopmate() {
     </>}
     <Dialog open={schedule} onOpenChange={setSchedule}><DialogContent className="shopmate-modal"><DialogTitle>A little time to talk</DialogTitle><DialogDescription>15 minutes with {mentor.name}. This is a local demo, not a real booking.</DialogDescription><label className="modal-label">Date<input type="date" value={date} min="2026-10-15" onChange={e => { setDate(e.target.value); setBooking(''); }}/></label><fieldset className="time-options"><legend>Available times</legend>{['10:00', '13:30', '16:00'].map(t => <Button key={t} variant={time === t ? 'default' : 'outline'} onClick={() => { setTime(t); setBooking(''); }}>{t}</Button>)}</fieldset>{booking ? <div className="confirmation" role="status"><CheckCheck/><h3>Demo consultation confirmed</h3><p>{booking} · 15 minutes</p><small>No real booking has been made.</small></div> : <Button className="primary-action" disabled={!date || date < '2026-10-15'} onClick={() => setBooking(`${date} at ${time}`)}>Confirm demo consultation<Check/></Button>}</DialogContent></Dialog>
     <Dialog open={!!why} onOpenChange={open => { if (!open) setWhy(null); }}><DialogContent className="shopmate-modal"><DialogTitle>Why {why?.name}?</DialogTitle><DialogDescription>{why?.detail}</DialogDescription><p className="quiet-note">{why?.score} / 5 estimated compatibility, based on your lunch-bundle mission.</p></DialogContent></Dialog>
-    <Dialog open={readiness} onOpenChange={setReadiness}><DialogContent className="shopmate-modal"><DialogTitle>Grow into a mentor</DialogTitle><DialogDescription>This unlocks when your shop reaches a readiness stage: complete your experiment, review the results, and build experience you can share.</DialogDescription><img className="readiness-house" src={growing.url} alt="Growing shop representing future mentor readiness"/><p className="quiet-note"><LockKeyhole size={16}/>Not eligible yet. No application has been submitted.</p></DialogContent></Dialog>
+    <Dialog open={readiness} onOpenChange={setReadiness}><DialogContent className="shopmate-modal"><DialogTitle>Grow into a mentor</DialogTitle><DialogDescription>This unlocks when your shop reaches a readiness stage: complete your experiment, review the results, and build experience you can share.</DialogDescription><div className="readiness-house"><House state="growing" alt="Growing shop representing future mentor readiness"/></div><p className="quiet-note"><LockKeyhole size={16}/>Not eligible yet. No application has been submitted.</p></DialogContent></Dialog>
   </div>;
 }
