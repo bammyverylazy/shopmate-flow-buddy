@@ -30,5 +30,5 @@ export const money = (value: number) => `฿${value.toLocaleString('en-US', { mi
 export const mentors = [
   { id: 'maya', name: 'Maya Chen', initials: 'MC', expertise: 'Menu design & pricing', score: 4.8, reason: 'Turns everyday meals into clear, fairly priced bundles.', detail: 'A strong fit for your lunch-bundle experiment, combining menu presentation with practical pricing checks.' },
   { id: 'daniel', name: 'Daniel Tan', initials: 'DT', expertise: 'Cost control & operations', score: 4.6, reason: 'Helps small kitchens protect contribution on every order.', detail: 'A strong fit for reviewing ingredients, packaging and fees before you launch your bundle.' },
-];
+] as const;
 export type Mentor = typeof mentors[number];

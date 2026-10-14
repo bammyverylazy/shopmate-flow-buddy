@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUpRight, Bot, CalendarDays, Check, CheckCheck, ChevronDown, Clock3, Leaf, LockKeyhole, MessageCircle, RotateCcw, Send, ShieldCheck, Sparkles, Star, Store, TrendingDown, Users, Utensils, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, Bot, CalendarDays, Check, CheckCheck, ChevronDown, Leaf, LockKeyhole, MessageCircle, RotateCcw, Send, ShieldCheck, Sparkles, Star, Store, TrendingDown, Users, Utensils } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import growing from '@/assets/Growing_home.gif.asset.json';
@@ -61,12 +61,12 @@ export function Shopmate() {
       <div className="opening-path"><span><TrendingDown/>Find your signal</span><ArrowRight/><span><Leaf/>Take action</span><ArrowRight/><span><Users/>Get support</span></div>
       <div className="opening-bottom">{nextButton('Explore my shop', 'ShopAlert')}<p className="prototype-notice">Interactive prototype · Example business data</p></div>
     </main> : <>
-      <div className="journey-header"><Button variant="ghost" size="icon" aria-label="Back" title="Back" onClick={() => go(index === 0 ? 'Opening' : screens[index - 1])}><ArrowLeft/></Button><span>{screenLabels[index]}</span><span className="step-number">{index + 1}<span> / 6</span></span></div>
+      <div className="journey-header"><Button variant="ghost" size="icon" aria-label="Back" title="Back" onClick={() => go(index === 0 ? 'Opening' : (screens[index - 1] ?? 'ShopAlert'))}><ArrowLeft/></Button><span>{screenLabels[index]}</span><span className="step-number">{index + 1}<span> / 6</span></span></div>
       <div className="step-track" aria-label={`Step ${index + 1} of 6`}>{screens.map((s, i) => <span key={s} className={i <= index ? 'reached' : ''}/>)}</div>
       <main className={`screen-content ${screen === 'AICoachMission' ? 'coach-screen' : ''}`} key={screen}>
         {screen === 'ShopAlert' && <>
           <div className="eyebrow">YOUR SHOP, AT A GLANCE</div>
-          <h1>A small dip.<br/>A chance to take action.</h1>
+          <h1>A small dip.<br/>Let’s take action.</h1>
           <p className="lead">Your shop has seen fewer orders recently.<br/>Let’s take a closer look, together.</p>
           <div className="shop-status"><div><span className="pill pill-warning"><TrendingDown size={13}/>Needs attention</span><h2>Aunt Nid’s Kitchen</h2><p>Thai home-style meals</p></div><img src={recovery.url} alt="Shop in the recovery stage"/></div>
           <div className="metrics"><div><span>Sales change</span><strong className="negative">−{Math.abs(summary.salesChange).toFixed(1)}%<TrendingDown size={17}/></strong><small>vs. previous 4 weeks</small></div><div><span>Orders</span><strong>{summary.orders}<small className="negative">−{Math.abs(summary.orderChange).toFixed(1)}%</small></strong><small>Latest 4 weeks</small></div><div><span>Avg. order</span><strong>{money(summary.aov)}</strong><small>Order value</small></div></div>
