@@ -1,6 +1,6 @@
-export type Screen = 'ShopAlert' | 'ShopInsight' | 'AICoachMission' | 'MentorMatch' | 'MentorHandoff' | 'MentorChat';
-export const screens: Screen[] = ['ShopAlert', 'ShopInsight', 'AICoachMission', 'MentorMatch', 'MentorHandoff', 'MentorChat'];
-export const screenLabels = ['Shop Alert', 'Shop Insight', 'AI Coach & Mission', 'Mentor Match', 'Mentor Handoff', 'Mentor Chat'];
+export type Screen = 'ShopAlert' | 'ShopInsight' | 'AICoachMission' | 'MentorMatch' | 'MentorHandoff' | 'MentorChat' | 'GraduateLoop';
+export const screens: Screen[] = ['ShopAlert', 'ShopInsight', 'AICoachMission', 'MentorMatch', 'MentorHandoff', 'MentorChat', 'GraduateLoop'];
+export const screenLabels = ['Shop Alert', 'Shop Insight', 'AI Coach & Mission', 'Mentor Match', 'Mentor Handoff', 'Mentor Chat', 'Graduate & Loop'];
 export const weeklyData = [
   { week: 'Aug 24', sales: 6000, orders: 100 }, { week: 'Aug 31', sales: 6300, orders: 105 },
   { week: 'Sep 7', sales: 6120, orders: 102 }, { week: 'Sep 14', sales: 6180, orders: 103 },
@@ -75,4 +75,33 @@ export function peerMetrics(profitPerOrder: number | null): PeerMetric[] {
     { id: 'prep', label: 'Prep time', unit: 'min', shop: 12, peers: 11, higherIsBetter: false, note: 'Demo value. Lower is better.' },
     { id: 'reviews', label: 'Positive reviews', unit: '%', shop: 88, peers: 87, higherIsBetter: true, note: 'Demo value.' },
   ];
+}
+
+// ---------------------------------------------------------------------------
+// Graduate & Loop. SAMPLE PROTOTYPE DATA: the app does not track a 12-week program, so these before/after
+// figures are illustrative, not verified business results, and do not show that mentoring caused the change.
+// ---------------------------------------------------------------------------
+export const graduation = {
+  weeks: 12, missions: 9, calls: 6,
+  metrics: [
+    { id: 'orders', label: 'Orders per week', before: 37, after: 58, format: 'number', higherIsBetter: true },
+    { id: 'profit', label: 'Profit per week', before: 1260, after: 2030, format: 'money', higherIsBetter: true },
+    { id: 'rating', label: 'Customer rating', before: 4.4, after: 4.6, format: 'rating', higherIsBetter: true },
+    { id: 'prep', label: 'Preparation time', before: 18, after: 14, format: 'minutes', higherIsBetter: false },
+  ],
+} as const;
+export type GradMetric = typeof graduation.metrics[number];
+export function formatGradValue(value: number, format: GradMetric['format']) {
+  switch (format) {
+    case 'money': return money(value);
+    case 'rating': return value.toFixed(1);
+    case 'minutes': return `${value} min`;
+    default: return String(value);
+  }
+}
+export function gradChange(m: Pick<GradMetric, 'before' | 'after' | 'format' | 'higherIsBetter'>) {
+  const diff = m.after - m.before;
+  const text = `${diff > 0 ? '+' : diff < 0 ? '−' : ''}${formatGradValue(Math.abs(Number(diff.toFixed(1))), m.format)}`;
+  const improved = m.higherIsBetter ? diff > 0 : diff < 0;
+  return { text, improved, diff };
 }

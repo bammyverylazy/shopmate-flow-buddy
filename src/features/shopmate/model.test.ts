@@ -19,3 +19,8 @@ describe('Skill Map', () => {
   it('classifies standing with a ±5% band', () => { expect(standing(4.9)).toBe('around'); expect(standing(5)).toBe('above'); expect(standing(-5)).toBe('below'); });
   it('uses real traffic and sales averages', () => { const m = peerMetrics(31.05); expect(m.find(x => x.id === 'traffic')?.shop).toBe(84); expect(m.find(x => x.id === 'sales')?.shop).toBe(5040); });
 });
+import { gradChange, graduation } from './model';
+describe('Graduate & Loop sample data', () => {
+  it('counts lower preparation time as an improvement', () => { const prep = graduation.metrics.find(m => m.id === 'prep')!; const c = gradChange(prep); expect(c.text).toBe('−4 min'); expect(c.improved).toBe(true); });
+  it('formats increases with a plus sign', () => { expect(gradChange(graduation.metrics[0]).text).toBe('+21'); expect(gradChange(graduation.metrics[1]).text).toBe('+฿770'); expect(gradChange(graduation.metrics[2]).text).toBe('+0.2'); });
+});
