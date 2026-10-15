@@ -1,5 +1,5 @@
 # Shopmate prototype
-- [x] Build independent opening and six-screen guided journey.
-- [x] Apply supplied palette and house assets; use fallbacks for pending assets.
-- [x] Implement and test shared sales/contribution calculations and local interactions.
-- [x] Verify entire journey, scheduling, and back navigation at 390 × 844 and 360px.
+- [ ] Update existing six screens and supplied branding, portraits, and food imagery.
+- [ ] Add skill tabs, context-aware support branches, five-minute mission, and continuous handoff.
+- [ ] Add consistent graduate eligibility and placeholder Early Warning rules with tests.
+- [ ] Verify complete local flow, calculator, scheduling, and both phone widths.
