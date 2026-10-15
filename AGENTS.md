@@ -14,6 +14,3 @@
 - Keep business calculations and the recent weekly dataset in the browser-safe Shopmate model module; pure functions give all screens one tested source of truth.
 - Keep prototype state in React only, including chats, mission, mentor selection and demo scheduling; this prototype intentionally does not use backend services or persistence.
 - Reference supplied media through original-filename asset pointers, and use simple styled fallbacks until remaining assets arrive; uploaded imagery must not be recreated or renamed.
-- Compose local simulated transcripts and message inputs with AI Elements; shared chat primitives provide readable messages, scroll behavior and accessible submission without introducing a live service.
-- Model graduate eligibility, house state, mentor exclusion and Early Warning in pure tested functions; all demo surfaces must share the same rule outcomes and never mutate historical sales.
-- Keep branch-aware navigation history and per-mentor conversations in the existing local state flow; edited handoff messages update the first user message even when reopening a conversation.
