@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUpRight, Bot, CalendarDays, Check, CheckCheck, ChevronDown, Leaf, LockKeyhole, MessageCircle, RotateCcw, Send, ShieldCheck, Sparkles, Star, Store, TrendingDown, Users, Utensils } from 'lucide-react';
+import { useRef, useState, type FormEvent } from 'react';
+import { ArrowLeft, ArrowRight, ArrowUpRight, Bot, CalendarDays, Check, CheckCheck, ChevronDown, Leaf, LockKeyhole, MessageCircle, Mic, RotateCcw, Send, Square, ShieldCheck, Sparkles, Star, Store, TrendingDown, Users, Utensils } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import growing from '@/assets/Growing_home.gif.asset.json';
@@ -10,6 +10,12 @@ import improvingPoster from '@/assets/Improving_home.gif.poster.png.asset.json';
 import recoveryPoster from '@/assets/Recovery_home.gif.poster.png.asset.json';
 import { contribution, defaultCosts, mentors, money, salesSummary, screens, screenLabels, type Costs, type Mentor, type Screen } from './model';
 import { SalesChart } from './SalesChart';
+import { useSpeechInput } from './useSpeechInput';
+import foodImg from '@/assets/food.png';
+import shopImg from '@/assets/shop_image.png';
+import ownerImg from '@/assets/shop_owner.png';
+import mentorMayaImg from '@/assets/mentor1.png';
+import mentorDanielImg from '@/assets/mentor3.png';
 
 type Message = { role: 'owner' | 'guide'; text: string };
 function House({ state, alt }: { state: 'growing' | 'improving' | 'recovery'; alt: string }) {
@@ -18,11 +24,30 @@ function House({ state, alt }: { state: 'growing' | 'improving' | 'recovery'; al
   return <picture><source media="(prefers-reduced-motion: reduce)" srcSet={poster?.url}/><img src={animation?.url} alt={alt}/></picture>;
 }
 function Brand() { return <div className="brand"><span className="brand-mark"><Store size={21}/></span><span>shopmate<span className="brand-period">.</span></span></div>; }
-function Avatar({ mentor, small = false }: { mentor: Mentor; small?: boolean }) { return <div className={`avatar avatar-${mentor.id} ${small ? 'avatar-small' : ''}`} aria-label={mentor.name}>{mentor.initials}</div>; }
-function Composer({ onSend, label }: { onSend: (text: string) => void; label: string }) {
+const mentorPhotos: Record<Mentor['id'], string> = { maya: mentorMayaImg, daniel: mentorDanielImg };
+function Avatar({ mentor, small = false }: { mentor: Mentor; small?: boolean }) { return <div className={`avatar avatar-${mentor.id} ${small ? 'avatar-small' : ''}`} role="img" aria-label={mentor.name}><img src={mentorPhotos[mentor.id]} alt="" loading="lazy"/></div>; }
+function Composer({ onSend, label, voice = false }: { onSend: (text: string) => void; label: string; voice?: boolean }) {
   const [text, setText] = useState('');
-  function submit(e: FormEvent) { e.preventDefault(); if (!text.trim()) return; onSend(text.trim()); setText(''); }
-  return <form className="composer" onSubmit={submit}><input aria-label={label} placeholder={label} value={text} onChange={e => setText(e.target.value)} maxLength={500}/><Button type="submit" size="icon" disabled={!text.trim()} aria-label="Send message" title="Send message"><Send size={17}/></Button></form>;
+  const base = useRef('');
+  const speech = useSpeechInput(transcript => setText(`${base.current}${transcript}`.slice(0, 500)));
+  function submit(e: FormEvent) { e.preventDefault(); if (!text.trim()) return; base.current = ''; speech.cancel(); onSend(text.trim()); setText(''); }
+  function toggleVoice() {
+    if (speech.listening) { speech.stop(); return; }
+    base.current = text && !/\s$/.test(text) ? `${text} ` : text;
+    speech.start();
+  }
+  return <>
+    <form className={`composer ${voice ? 'composer-voice' : ''}`} onSubmit={submit}>
+      <input aria-label={label} placeholder={speech.listening ? 'Listening…' : label} value={text} onChange={e => setText(e.target.value)} maxLength={500}/>
+      {voice && <Button type="button" size="icon" variant={speech.listening ? 'destructive' : 'outline'} className={speech.listening ? 'voice-button is-listening' : 'voice-button'} aria-pressed={speech.listening} aria-label={speech.listening ? 'Stop voice input' : 'Voice input: speak your message'} title={speech.listening ? 'Stop listening' : 'Voice: speak your message'} onClick={toggleVoice}>{speech.listening ? <Square size={14} fill="currentColor"/> : <Mic size={17}/>}</Button>}
+      <Button type="submit" size="icon" disabled={!text.trim()} aria-label="Send message" title="Send message"><Send size={17}/></Button>
+    </form>
+    {voice && <div className="voice-status" role="status" aria-live="polite">
+      {speech.listening ? <><span className="voice-dot" aria-hidden="true"/><span>Listening… speak now, then review before sending.</span><button type="button" onClick={() => { speech.cancel(); }}>Cancel</button></>
+        : speech.message ? <span className="voice-error">{speech.message}</span>
+        : <span>Voice turns your speech into text. Nothing is sent until you press Send. Your browser may process audio on its speech service.</span>}
+    </div>}
+  </>;
 }
 function Bubbles({ messages }: { messages: Message[] }) { return <div className="bubbles" aria-live="polite">{messages.map((m, i) => <div key={i} className={`bubble bubble-${m.role}`}>{m.text}</div>)}</div>; }
 
@@ -31,7 +56,10 @@ export function Shopmate() {
   const [costs, setCosts] = useState<Costs>(defaultCosts);
   const [mission, setMission] = useState(false);
   const [mentor, setMentor] = useState<Mentor>(mentors[0]);
-  const [opening, setOpening] = useState('I’m considering a lunch bundle and would like help checking the cost and presenting it clearly to customers.');
+  const defaultOpening = 'I’m considering a lunch bundle and would like help checking the cost and presenting it clearly to customers.';
+  const [opening, setOpening] = useState(defaultOpening);
+  const [viaInsight, setViaInsight] = useState(false);
+  const history = useRef<(Screen | 'Opening')[]>([]);
   const [coachMessages, setCoachMessages] = useState<Message[]>([
     { role: 'owner', text: 'Orders have been lower. Could a lunch bundle help?' },
     { role: 'guide', text: 'It’s worth testing. Let’s check the cost and choose a price that leaves enough contribution.' },
@@ -46,7 +74,20 @@ export function Shopmate() {
   const result = contribution(costs);
   const summary = salesSummary();
   const index = screen === 'Opening' ? -1 : screens.indexOf(screen);
-  function go(next: Screen | 'Opening') { setScreen(next); window.scrollTo({ top: 0, behavior: 'instant' }); }
+  function go(next: Screen | 'Opening', back = false) {
+    if (!back && screen !== next) history.current.push(screen);
+    setScreen(next); window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  function goBack() {
+    const previous = history.current.pop();
+    go(previous ?? (index <= 0 ? 'Opening' : (screens[index - 1] ?? 'ShopAlert')), true);
+  }
+  // Ask Mentor from Shop Insight: carry the order-dip insight into the mentor flow (only if the user hasn't edited their first message).
+  function askMentor() {
+    setViaInsight(true);
+    setOpening(o => o === defaultOpening ? `My orders fell ${Math.abs(summary.orderChange).toFixed(1)}% recently while average order value stayed at ${money(summary.aov)}. I’m considering a lunch bundle and would like help checking the cost and presenting it clearly to customers.` : o);
+    go('MentorMatch');
+  }
   const nextButton = (label: string, next: Screen, disabled = false) => <Button className="primary-action" disabled={disabled} onClick={() => go(next)}>{label}<ArrowRight size={18}/></Button>;
   const choose = (selected: Mentor) => { setMentor(selected); go('MentorHandoff'); };
   function startChat() {
@@ -68,14 +109,15 @@ export function Shopmate() {
       <div className="opening-path"><span><TrendingDown/>Find your signal</span><ArrowRight/><span><Leaf/>Take action</span><ArrowRight/><span><Users/>Get support</span></div>
       <div className="opening-bottom">{nextButton('Explore my shop', 'ShopAlert')}<p className="prototype-notice">Interactive prototype · Example business data</p></div>
     </main> : <>
-      <div className="journey-header"><Button variant="ghost" size="icon" aria-label="Back" title="Back" onClick={() => go(index === 0 ? 'Opening' : (screens[index - 1] ?? 'ShopAlert'))}><ArrowLeft/></Button><span>{screenLabels[index]}</span><span className="step-number">{index + 1}<span> / 6</span></span></div>
+      <div className="journey-header"><Button variant="ghost" size="icon" aria-label="Back" title="Back" onClick={goBack}><ArrowLeft/></Button><span>{screenLabels[index]}</span><span className="step-number">{index + 1}<span> / 6</span></span></div>
       <div className="step-track" aria-label={`Step ${index + 1} of 6`}>{screens.map((s, i) => <span key={s} className={i <= index ? 'reached' : ''}/>)}</div>
       <main className={`screen-content ${screen === 'AICoachMission' ? 'coach-screen' : ''}`} key={screen}>
         {screen === 'ShopAlert' && <>
           <div className="eyebrow">YOUR SHOP, AT A GLANCE</div>
           <h1>A small dip.<br/>Let’s take action.</h1>
           <p className="lead">Your shop has seen fewer orders recently.<br/>Let’s take a closer look, together.</p>
-          <div className="shop-status"><div><span className="pill pill-warning"><TrendingDown size={13}/>Needs attention</span><h2>Aunt Nid’s Kitchen</h2><p>Thai home-style meals</p></div><House state="recovery" alt="Shop in the recovery stage"/></div>
+          <img className="shop-front" src={shopImg} alt="Aunt Nid’s chicken rice shop front" loading="lazy"/>
+          <div className="shop-status"><div><span className="pill pill-warning"><TrendingDown size={13}/>Needs attention</span><div className="owner-line"><img src={ownerImg} alt="Aunt Nid, shop owner" loading="lazy"/><div><h2>Aunt Nid’s Kitchen</h2><p>Thai home-style meals</p></div></div></div><House state="recovery" alt="Shop in the recovery stage"/></div>
           <div className="metrics"><div><span>Sales change</span><strong className="negative">−{Math.abs(summary.salesChange).toFixed(1)}%<TrendingDown size={17}/></strong><small>vs. previous 4 weeks</small></div><div><span>Orders</span><strong>{summary.orders}<small className="negative">−{Math.abs(summary.orderChange).toFixed(1)}%</small></strong><small>Latest 4 weeks</small></div><div><span>Avg. order</span><strong>{money(summary.aov)}</strong><small>Order value</small></div></div>
           <SalesChart/>
           <p className="quiet-note"><span className="note-line"/>Fewer orders, rather than lower order value, explain the sales dip. The cause is still uncertain.</p>
@@ -89,11 +131,11 @@ export function Shopmate() {
           <div className="factor"><Utensils/><div><h3>Could a lunch bundle help?</h3><p>A clear, convenient set may make ordering easier.</p></div><span>01</span></div>
           <div className="factor"><Store/><div><h3>Is your menu getting noticed?</h3><p>Clearer photos and descriptions may help.</p></div><span>02</span></div>
           <p className="quiet-note"><ShieldCheck size={17}/>The trend doesn’t prove a cause. Test one idea and measure what happens.</p>
-          <div className="screen-footer">{nextButton('Explore a solution', 'AICoachMission')}</div>
+          <div className="screen-footer cta-pair"><Button className="cta-button" onClick={() => go('AICoachMission')}><Bot size={17}/>AI Coach</Button><Button className="cta-button" variant="outline" onClick={askMentor}><Users size={17}/>Ask Mentor</Button></div>
         </>}
         {screen === 'AICoachMission' && <>
           <div className="eyebrow">YOUR NEXT SMALL STEP</div><h1>Let’s make a plan.</h1>
-          <section className="coach-chat"><div className="section-heading"><span className="icon-tile"><Bot size={18}/></span><h2>AI Coach</h2><span className="small-label">Lunch-bundle experiment</span></div><Bubbles messages={coachMessages}/><Composer label="Ask your coach…" onSend={text => setCoachMessages(m => [...m, { role: 'owner', text }, { role: 'guide', text: result.valid ? `At ${money(Number(costs.price))}, your estimated contribution is ${money(result.contribution)} per bundle. Try a small batch and track orders before changing the menu.` : 'Let’s correct the calculator inputs first, then check the contribution before testing a bundle.' }])}/></section>
+          <section className="coach-chat"><div className="section-heading"><span className="icon-tile"><Bot size={18}/></span><h2>AI Coach</h2><span className="small-label">Lunch-bundle experiment</span></div><Bubbles messages={coachMessages}/><Composer voice label="Ask your coach…" onSend={text => setCoachMessages(m => [...m, { role: 'owner', text }, { role: 'guide', text: result.valid ? `At ${money(Number(costs.price))}, your estimated contribution is ${money(result.contribution)} per bundle. Try a small batch and track orders before changing the menu.` : 'Let’s correct the calculator inputs first, then check the contribution before testing a bundle.' }])}/></section>
           <section className="calculator"><div className="section-heading"><h2>Will the price work?</h2><Button variant="ghost" size="icon" title="Reset example inputs" aria-label="Reset example inputs" onClick={() => setCosts(defaultCosts)}><RotateCcw size={15}/></Button></div>
             <div className="cost-inputs">{([['ingredients', 'Ingredients', '฿'], ['packaging', 'Packaging', '฿'], ['other', 'Other costs', '฿'], ['price', 'Selling price', '฿'], ['fee', 'Payment fee', '%']] as const).map(([key, label, unit]) => <label key={key}>{label}<div className="number-input"><span>{unit}</span><input aria-label={label} type="number" min="0" max={key === 'fee' ? 100 : undefined} step="0.1" value={costs[key]} onChange={e => setCosts(c => ({ ...c, [key]: e.target.value }))} aria-invalid={costs[key].trim() === '' || Number(costs[key]) < 0}/></div></label>)}</div>
             {!result.valid && <p className="input-error" role="alert">Enter valid, non-negative values. Fee must be 0–100%.</p>}
@@ -106,7 +148,7 @@ export function Shopmate() {
         </>}
         {screen === 'MentorMatch' && <>
           <div className="eyebrow">YOU DON’T HAVE TO DO IT ALONE</div><h1>A little guidance.<br/>The right person.</h1><p className="lead">Two mentors for your lunch-bundle mission.</p>
-          <div className="context-strip"><Leaf size={16}/><span>Test a lunch bundle</span><span>Active mission</span></div>
+          <div className="context-strip"><Leaf size={16}/><span>Test a lunch bundle</span><span>{mission ? 'Active mission' : viaInsight ? 'From your shop insight' : 'Active mission'}</span></div>
           <div className="mentor-list">{mentors.map(m => <article className="mentor-card" key={m.id}><div className="mentor-top"><Avatar mentor={m}/><div><h2>{m.name}</h2><p>{m.expertise}</p><div className="match-score"><Star size={13}/><b>{m.score} / 5</b><span>Compatibility</span></div></div>{m.id === 'maya' && <span className="top-match">Best fit</span>}</div><p className="mentor-reason">{m.reason}</p><div className="mentor-actions"><Button variant="ghost" size="sm" onClick={() => setWhy(m)}>Why this match?<ArrowUpRight size={13}/></Button><Button size="sm" onClick={() => choose(m)}>Choose mentor<ArrowRight size={13}/></Button></div></article>)}</div>
           <p className="quiet-note"><ShieldCheck size={17}/>Match scores estimate compatibility with your mission, not public review ratings.</p>
           <div className="support-note"><MessageCircle/><span>A fresh perspective can make<br/>your next step a little easier.</span></div>
@@ -123,7 +165,7 @@ export function Shopmate() {
         {screen === 'MentorChat' && <>
           <div className="chat-identity"><Avatar mentor={mentor} small/><div><h2>{mentor.name}</h2><p>{mentor.expertise}</p></div><MessageCircle size={20}/></div>
           <div className="chat-date">YOUR FIRST CONVERSATION</div>
-          <div className="mentor-conversation"><Bubbles messages={(chats[mentor.id] || []).slice(0, 3)}/><div className="menu-example"><div className="menu-symbol"><Utensils size={27}/><span>LUNCH SET</span></div><div><h3>Aunt Nid’s lunch bundle</h3><p>Main dish + rice + a refreshing drink</p><strong>{money(Number(costs.price) || 0)}</strong></div></div><p className="image-caption">Suggested menu layout · Make every included item clear</p><Bubbles messages={(chats[mentor.id] || []).slice(3)}/></div>
+          <div className="mentor-conversation"><Bubbles messages={(chats[mentor.id] || []).slice(0, 3)}/><div className="menu-example"><img className="menu-photo" src={foodImg} alt="Chicken rice set with soup and dipping sauces" loading="lazy"/><div><h3>Aunt Nid’s lunch bundle</h3><p>Main dish + rice + a refreshing drink</p><strong>{money(Number(costs.price) || 0)}</strong></div></div><p className="image-caption">Suggested menu layout · Make every included item clear</p><Bubbles messages={(chats[mentor.id] || []).slice(3)}/></div>
           <div className="chat-bottom"><Composer label="Message your mentor…" onSend={text => setChats(c => ({ ...c, [mentor.id]: [...(c[mentor.id] || []), { role: 'owner', text }, { role: 'guide', text: `Keep the first test small. Track bundle orders for 7 days and review your ${result.valid ? money(result.contribution) : 'estimated'} contribution per order before making it permanent.` }] }))}/><Button variant="outline" className="schedule-action" onClick={() => setSchedule(true)}><CalendarDays size={16}/>{booking ? 'View 15-minute call' : 'Schedule a 15-minute call'}<ArrowRight size={15}/></Button>{booking && <p className="booking-note"><CheckCheck size={14}/>Demo confirmed · {booking}</p>}</div>
         </>}
       </main>

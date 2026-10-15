@@ -248,3 +248,30 @@
 @media (min-width: 600px) { .shopmate-shell { margin: 35px auto; min-height: 820px; border-radius: 10px; border: 1px solid var(--border); box-shadow: var(--shadow-panel); } .opening { min-height: 740px; } .screen-content { min-height: 680px; padding-inline: 30px; } .opening-art { margin-top: 35px; } }
 @media (max-width: 374px) { .app-header { margin-inline: 20px; } .brand { font-size: 21px; gap: 4px; } .screen-content,.opening { padding-inline: 20px; } .step-track { margin-inline: 20px; } .journey-header { margin-inline: 18px; } .opening h1 { font-size: 37px; } .opening-art { margin-top: 25px; } .mentor-top { grid-template-columns: 42px minmax(0,1fr) auto; gap: 8px; } .mentor-top .avatar { width: 42px; height: 42px; } .mentor-top h2 { font-size: 13px; } .metrics strong { font-size: 21px; } .cost-totals { font-size: 7.5px; } }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* Shop Insight: two side-by-side CTAs */
+.cta-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cta-button { width: 100%; height: 48px; min-width: 0; padding: 0 10px; border-radius: 7px; gap: 7px; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: none; justify-content: center; }
+.cta-button svg { flex-shrink: 0; }
+
+/* AI Coach composer: Voice beside Send */
+.composer.composer-voice { grid-template-columns: minmax(0, 1fr) 32px 32px; gap: 6px; }
+.composer .voice-button { box-shadow: none; }
+.composer .voice-button.is-listening { animation: voice-pulse 1.4s ease-in-out infinite; }
+.voice-status { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-top: 7px; font-size: 10px; line-height: 1.5; color: var(--muted-foreground); }
+.voice-status button { margin-left: auto; font-size: 10px; font-weight: 600; text-decoration: underline; color: var(--primary); background: none; border: 0; padding: 2px 4px; cursor: pointer; }
+.voice-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--destructive); animation: voice-pulse 1.4s ease-in-out infinite; flex-shrink: 0; }
+.voice-error { color: var(--destructive); }
+@keyframes voice-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .composer .voice-button.is-listening, .voice-dot { animation: none; } }
+
+/* New photo assets */
+.avatar { overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; display: block; }
+.menu-photo { width: 78px; aspect-ratio: 1; object-fit: cover; border-radius: 4px; display: block; }
+.shop-front { display: block; width: 100%; aspect-ratio: 16 / 7; object-fit: cover; object-position: center 35%; border-radius: 8px; margin-top: 16px; }
+.shop-status { margin-top: 12px; }
+.owner-line { display: flex; align-items: center; gap: 9px; margin-top: 10px; min-width: 0; }
+.owner-line h2, .owner-line p { margin-top: 0; }
+.owner-line p { margin-top: 3px; }
+.owner-line img { mix-blend-mode: normal; aspect-ratio: 1; width: 38px; height: 38px; border-radius: 50%; object-fit: cover; object-position: center 20%; flex-shrink: 0; }
