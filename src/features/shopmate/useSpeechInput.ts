@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 type RecognitionResult = { isFinal: boolean; 0: { transcript: string } };
 type RecognitionEvent = { resultIndex: number; results: ArrayLike<RecognitionResult> };
 type RecognitionErrorEvent = { error: string };
-interface Recognition {
+export interface Recognition {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
@@ -18,7 +18,7 @@ interface Recognition {
 }
 type RecognitionCtor = new () => Recognition;
 
-function getCtor(): RecognitionCtor | undefined {
+export function getCtor(): RecognitionCtor | undefined {
   if (typeof window === 'undefined') return undefined;
   const w = window as unknown as { SpeechRecognition?: RecognitionCtor; webkitSpeechRecognition?: RecognitionCtor };
   return w.SpeechRecognition ?? w.webkitSpeechRecognition;
