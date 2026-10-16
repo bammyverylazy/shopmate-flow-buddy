@@ -11,9 +11,13 @@ describe('README calculation rules', () => {
   it('calculates sales change against the comparison period', () => { expect(change(80, 100)).toBe(-20); });
 });import { clampPct, peerDelta, peerMetrics, skillLevel, skillList, standing, weakestSkill } from './model';
 describe('Skill Map', () => {
-  it('keeps all six skill scores within 0–100', () => { const l = skillList(); expect(l).toHaveLength(6); l.forEach(s => { expect(s.score).toBeGreaterThanOrEqual(0); expect(s.score).toBeLessThanOrEqual(100); }); });
-  it('derives Order Performance from real order change', () => { expect(skillList().find(s => s.id === 'orders')?.score).toBe(clampPct(100 + salesSummary().orderChange * 2)); });
-  it('finds the weakest skill', () => { expect(weakestSkill(skillList()).id).toBe('promotion'); });
+  const SIGNALS = ['sales', 'profitability', 'prep', 'traffic', 'reviews', 'operations'];
+  it('has exactly the six health signals in order, with unique ids and names', () => { const l = skillList(); expect(l.map(s => s.id)).toEqual(SIGNALS); expect(l.map(s => s.name)).toEqual(['Sales', 'Profitability', 'Preparation Time', 'Customer Traffic', 'Positive Reviews', 'Operations']); expect(new Set(l.map(s => s.short)).size).toBe(6); });
+  it('keeps all six signal scores within 0–100', () => { skillList().forEach(s => { expect(s.score).toBeGreaterThanOrEqual(0); expect(s.score).toBeLessThanOrEqual(100); }); });
+  it('uses the same six signals for the power bars', () => { expect(peerMetrics(31.05).map(m => m.id)).toEqual(SIGNALS); expect(peerMetrics(31.05).map(m => m.label)).toEqual(skillList().map(s => s.name)); });
+  it('keeps each signal score direction consistent with its power bar', () => { const l = skillList(); peerMetrics(31.05).forEach(m => { const sk = l.find(s => s.id === m.id)!; const d = peerDelta(m.shop as number, m.peers, m.higherIsBetter); const st = standing(d); const gap = sk.score - sk.peers; expect(st === 'above' ? gap > 0 : st === 'below' ? gap < 0 : Math.abs(gap) < 5).toBe(true); }); });
+  it('derives Sales and Customer Traffic from the real weekly data', () => { const s = salesSummary(); expect(skillList().find(x => x.id === 'sales')?.score).toBe(clampPct(100 + s.salesChange * 2)); expect(skillList().find(x => x.id === 'traffic')?.score).toBe(clampPct(100 + s.orderChange * 2.5)); });
+  it('finds the weakest signal', () => { expect(weakestSkill(skillList()).id).toBe('traffic'); });
   it('classifies levels', () => { expect(skillLevel(70)).toBe('strong'); expect(skillLevel(69)).toBe('developing'); expect(skillLevel(49)).toBe('needs-work'); });
   it('treats lower-is-better metrics correctly', () => { expect(peerDelta(10, 11, false)).toBeGreaterThan(0); expect(peerDelta(12, 11, false)).toBeLessThan(0); expect(peerDelta(80, 100, true)).toBe(-20); });
   it('classifies standing with a ±5% band', () => { expect(standing(4.9)).toBe('around'); expect(standing(5)).toBe('above'); expect(standing(-5)).toBe('below'); });

@@ -93,7 +93,7 @@ export function Shopmate() {
     setFocusSkill(skill ?? null);
     if (skill && announcedSkill.current !== skill.id) {
       announcedSkill.current = skill.id;
-      setCoachMessages(m => [...m, { role: 'guide', text: `You picked ${skill.name} (${skill.score}% in the demo skill map). ${skill.improve} A good next step: ${skill.next}` }]);
+      setCoachMessages(m => [...m, { role: 'guide', text: `You picked ${skill.name} (${skill.score}% in the demo Skill Map). ${skill.improve} A good next step: ${skill.next}` }]);
     }
     go('AICoachMission');
   }
@@ -102,7 +102,7 @@ export function Shopmate() {
   function askMentor(skill?: Skill) {
     setViaInsight(true);
     setFocusSkill(skill ?? null);
-    const text = `My orders fell ${Math.abs(summary.orderChange).toFixed(1)}% recently while average order value stayed at ${money(summary.aov)}. ${skill ? `I’d like help with ${skill.name}, which is one of my weaker areas in the demo skill map. ` : ''}I’m considering a lunch bundle and would like help checking the cost and presenting it clearly to customers.`;
+    const text = `My orders fell ${Math.abs(summary.orderChange).toFixed(1)}% recently while average order value stayed at ${money(summary.aov)}. ${skill ? `I’d like help with ${skill.name}, which I’m looking at in the demo Skill Map. ` : ''}I’m considering a lunch bundle and would like help checking the cost and presenting it clearly to customers.`;
     if (opening === defaultOpening || opening === autoOpening.current) { autoOpening.current = text; setOpening(text); }
     go('MentorMatch');
   }
