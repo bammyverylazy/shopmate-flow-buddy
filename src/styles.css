@@ -427,3 +427,36 @@
 .eligibility li { display: flex; align-items: center; gap: 8px; }
 .eligibility svg { color: var(--primary); flex-shrink: 0; }
 .finish-action { width: 100%; margin-top: 8px; font-size: 11px; color: var(--muted-foreground); gap: 6px; border: 1px dashed var(--border); }
+
+/* Group Mentor Chat */
+.chat-tabs { margin: 12px 0 10px; }
+.cohort-strip { margin-bottom: 10px; }
+.cohort-head { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--primary); }
+.cohort-head span { color: var(--muted-foreground); }
+.cohort-list { list-style: none; padding: 0; margin: 8px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.cohort-list li { display: flex; align-items: center; gap: 7px; min-width: 0; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 7px; }
+.cohort-list li > span { display: flex; flex-direction: column; min-width: 0; }
+.cohort-list b { font-size: 10px; line-height: 1.3; overflow-wrap: anywhere; }
+.cohort-list small { font-size: 9px; color: var(--muted-foreground); line-height: 1.3; }
+.group-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; object-position: center 25%; flex-shrink: 0; background: var(--secondary); display: block; }
+.group-avatar-wrap { flex-shrink: 0; display: block; }
+.group-avatar-wrap .avatar { width: 30px; height: 30px; }
+.cohort-intro { font-size: 11px; line-height: 1.55; color: var(--muted-foreground); margin: 2px 0 8px; }
+.topic-card { background: var(--secondary); border-radius: 8px; padding: 9px 11px; }
+.topic-card h3 { font-size: 13px; margin-top: 2px; }
+.group-messages { display: flex; flex-direction: column; gap: 10px; max-height: 440px; overflow-y: auto; padding: 4px 2px 4px 0; }
+.group-row { display: flex; align-items: flex-end; gap: 7px; }
+.group-row.is-mine { justify-content: flex-end; }
+.group-bubble { min-width: 0; max-width: 86%; background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 8px 11px; }
+.group-bubble.is-mentor { background: var(--secondary); }
+.group-row.is-mine .group-bubble { background: var(--secondary); border-color: transparent; }
+.group-bubble p { font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.group-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; margin-bottom: 3px; }
+.group-meta b { font-size: 10.5px; color: var(--primary); }
+.group-meta span { font-size: 9px; color: var(--muted-foreground); }
+.group-bubble.is-challenge { background: var(--amber); border-color: oklch(0.88 0.06 85); }
+.challenge-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; color: var(--amber-foreground); margin-bottom: 3px; }
+.group-photo { margin: 7px 0 0; }
+.group-photo img { display: block; width: 100%; height: auto; border-radius: 6px; max-width: 230px; }
+.group-photo img.photo-priceBoard { max-width: 150px; }
+.group-photo figcaption { font-size: 9px; color: var(--muted-foreground); margin-top: 4px; line-height: 1.4; }

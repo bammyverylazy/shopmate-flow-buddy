@@ -11,6 +11,8 @@ import recoveryPoster from '@/assets/Recovery_home.gif.poster.png.asset.json';
 import { contribution, defaultCosts, mentors, money, peerMetrics, salesSummary, screens, screenLabels, skillList, weakestSkill, type Costs, type Mentor, type Screen, type Skill, type SkillId } from './model';
 import { SkillMap } from './SkillMap';
 import { GraduateLoop } from './GraduateLoop';
+import { CohortStrip, GroupMessages } from './GroupChat';
+import { groupReplies, groupSeed, privateChallenge, privateReply, privateSeed, type GroupMessage } from './groupChatData';
 import { SalesChart } from './SalesChart';
 import { VoiceMode } from './VoiceMode';
 import foodImg from '@/assets/food.png';
@@ -59,6 +61,10 @@ export function Shopmate() {
     { role: 'guide', text: 'It’s worth testing. Let’s check the cost and choose a price that leaves enough contribution.' },
   ]);
   const [chats, setChats] = useState<Record<string, Message[]>>({});
+  // Group Chat is the default mode. Each mentor and each mode keeps its own history, so switching never mixes or erases messages.
+  const [chatMode, setChatMode] = useState<'group' | 'private'>('group');
+  const [groupChats, setGroupChats] = useState<Record<string, GroupMessage[]>>({});
+  const groupMessages = groupChats[mentor.id] ?? groupSeed(mentor.id);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [finishOpen, setFinishOpen] = useState(false);
   const [applyOpen, setApplyOpen] = useState(false);
@@ -105,9 +111,11 @@ export function Shopmate() {
   function startChat() {
     if (!chats[mentor.id]) setChats(c => ({ ...c, [mentor.id]: [
       { role: 'owner', text: opening },
-      { role: 'guide', text: 'Let’s check the cost first. A bundle should be convenient for customers and still leave enough contribution for your shop.' },
-      { role: 'guide', text: 'Present the included items and price clearly. A simple set like this is a good place to start.' },
+      { role: 'guide', text: privateSeed[mentor.id][0] },
+      { role: 'guide', text: privateSeed[mentor.id][1] },
+      { role: 'guide', text: privateChallenge[mentor.id] },
     ] }));
+    setChatMode('group');
     go('MentorChat');
   }
 
@@ -179,9 +187,24 @@ export function Shopmate() {
         </>}
         {screen === 'MentorChat' && <>
           <div className="chat-identity"><Avatar mentor={mentor} small/><div><h2>{mentor.name}</h2><p>{mentor.expertise}</p></div><MessageCircle size={20}/></div>
-          <div className="chat-date">YOUR FIRST CONVERSATION</div>
+          <div className="insight-tabs chat-tabs" role="tablist" aria-label="Chat mode"><button type="button" role="tab" aria-selected={chatMode === 'group'} onClick={() => setChatMode('group')}>Group Chat</button><button type="button" role="tab" aria-selected={chatMode === 'private'} onClick={() => setChatMode('private')}>Talk Individually</button></div>
+          {chatMode === 'group' ? <>
+            <CohortStrip mentorId={mentor.id} mentorName={mentor.name}/>
+            <GroupMessages messages={groupMessages} mentorId={mentor.id} mentorName={mentor.name} mentorAvatar={<Avatar mentor={mentor} small/>}/>
+          </> : <>
+          <div className="chat-date">YOUR FIRST CONVERSATION · ONE-TO-ONE WITH {mentor.name.toUpperCase()}</div>
           <div className="mentor-conversation"><Bubbles messages={(chats[mentor.id] || []).slice(0, 3)}/><div className="menu-example"><img className="menu-photo" src={foodImg} alt="Chicken rice set with soup and dipping sauces" loading="lazy"/><div><h3>Aunt Nid’s lunch bundle</h3><p>Main dish + rice + a refreshing drink</p><strong>{money(Number(costs.price) || 0)}</strong></div></div><p className="image-caption">Suggested menu layout · Make every included item clear</p><Bubbles messages={(chats[mentor.id] || []).slice(3)}/></div>
-          <div className="chat-bottom"><Composer label="Message your mentor…" onSend={text => setChats(c => ({ ...c, [mentor.id]: [...(c[mentor.id] || []), { role: 'owner', text }, { role: 'guide', text: `Keep the first test small. Track bundle orders for 7 days and review your ${result.valid ? money(result.contribution) : 'estimated'} contribution per order before making it permanent.` }] }))}/><Button variant="outline" className="schedule-action" onClick={() => setSchedule(true)}><CalendarDays size={16}/>{booking ? 'View 15-minute call' : 'Schedule a 15-minute call'}<ArrowRight size={15}/></Button>{booking && <p className="booking-note"><CheckCheck size={14}/>Demo confirmed · {booking}</p>}<Button variant="ghost" className="finish-action" onClick={() => setFinishOpen(true)}><GraduationCap size={16}/>Finish 12-week program (demo)</Button></div>
+          </>}
+          <div className="chat-bottom"><Composer key={chatMode} label={chatMode === 'group' ? 'Message the group…' : 'Message your mentor…'} onSend={text => {
+            const ctx = { valid: result.valid, price: money(Number(costs.price)), contribution: money(result.contribution) };
+            if (chatMode === 'group') setGroupChats(g => {
+              const list = g[mentor.id] ?? groupSeed(mentor.id);
+              const n = list.filter(m => m.from === 'you').length + 1;
+              const stamp = list.length;
+              return { ...g, [mentor.id]: [...list, { id: `${mentor.id}-you-${n}`, from: 'you', text }, ...groupReplies(mentor.id, n, ctx).map((d, k) => ({ ...d, id: `${mentor.id}-reply-${n}-${k}-${stamp}` }))] };
+            });
+            else setChats(c => { const list = c[mentor.id] || []; const n = list.filter(m => m.role === 'owner').length; return { ...c, [mentor.id]: [...list, { role: 'owner', text }, { role: 'guide', text: privateReply(mentor.id, n, ctx) }] }; });
+          }}/><Button variant="outline" className="schedule-action" onClick={() => setSchedule(true)}><CalendarDays size={16}/>{booking ? 'View 15-minute call' : 'Schedule a 15-minute call'}<ArrowRight size={15}/></Button>{booking && <p className="booking-note"><CheckCheck size={14}/>Demo confirmed · {booking}</p>}<Button variant="ghost" className="finish-action" onClick={() => setFinishOpen(true)}><GraduationCap size={16}/>Finish 12-week program (demo)</Button></div>
         </>}
         {screen === 'GraduateLoop' && <GraduateLoop mentorName={mentor.name} applyOpen={applyOpen} setApplyOpen={setApplyOpen} applied={mentorApplied} onApply={() => setMentorApplied(true)} onReplay={() => go('Opening')}/>}
       </main>

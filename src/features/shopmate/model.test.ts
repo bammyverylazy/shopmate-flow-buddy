@@ -24,3 +24,12 @@ describe('Graduate & Loop sample data', () => {
   it('counts lower preparation time as an improvement', () => { const prep = graduation.metrics.find(m => m.id === 'prep')!; const c = gradChange(prep); expect(c.text).toBe('−4 min'); expect(c.improved).toBe(true); });
   it('formats increases with a plus sign', () => { expect(gradChange(graduation.metrics[0]).text).toBe('+21'); expect(gradChange(graduation.metrics[1]).text).toBe('+฿770'); expect(gradChange(graduation.metrics[2]).text).toBe('+0.2'); });
 });
+import { cohort, cohortSize, groupReplies, groupScripts, groupSeed, peers, privateReply, privateSeed } from './groupChatData';
+describe('Group Mentor Chat content', () => {
+  it('has a small related cohort that includes the user shop', () => { expect(cohortSize).toBe(5); expect(cohort[0]!.id).toBe('you'); expect(new Set(cohort.map(c => c.shop)).size).toBe(5); expect(new Set(cohort.map(c => c.challenge)).size).toBe(5); });
+  it('gives each mentor a different group script', () => { const m = groupScripts.maya.map(x => x.text); const d = groupScripts.daniel.map(x => x.text); expect(m[0]).not.toBe(d[0]); expect(m.filter(t => d.includes(t))).toHaveLength(0); });
+  it('uses at most three inline images and every sender is a cohort member or the mentor', () => { (['maya', 'daniel'] as const).forEach(id => { const s = groupSeed(id); expect(s.filter(x => x.image).length).toBeLessThanOrEqual(3); expect(s.some(x => x.challenge)).toBe(true); s.forEach(x => expect(x.from === 'mentor' || cohort.some(c => c.id === x.from && c.id !== 'you')).toBe(true)); }); });
+  it('never scripts words for the user', () => { expect(groupSeed('maya').some(x => x.from === 'you')).toBe(false); });
+  it('replies deterministically and rotates peers', () => { const ctx = { valid: true, price: '฿65', contribution: '฿31.05' }; expect(groupReplies('daniel', 1, ctx)).toEqual(groupReplies('daniel', 1, ctx)); expect(groupReplies('maya', 1, ctx)[0]!.from).toBe(peers[0]); expect(groupReplies('maya', 2, ctx)[0]!.from).toBe(peers[1]); expect(groupReplies('daniel', 1, ctx)[1]!.text).toContain('฿31.05'); });
+  it('keeps private styles distinct', () => { const ctx = { valid: true, price: '฿65', contribution: '฿31.05' }; expect(privateReply('maya', 1, ctx)).not.toBe(privateReply('daniel', 1, ctx)); expect(privateSeed.maya[0]).not.toBe(privateSeed.daniel[0]); });
+});
